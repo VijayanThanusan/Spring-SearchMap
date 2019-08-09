@@ -1,0 +1,135 @@
+
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	<context:component-scan base-package="com.projet" />
+	
+	<!-- Repertorier les fichiers .propreties dans main/resources/ pour internationalisation -->
+    <bean id="messageSource"
+        class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename" value="classpath:messages" />
+        <property name="defaultEncoding" value="ISO-8859-1" />
+    </bean>
+    
+    <!-- Choix de la langue par défaut : fr pour Français, en pour Anglais, ... -->
+	<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+		<property name="defaultLocale" value="fr" />
+	</bean>
+
+	<!-- Ajout du paramètre ?language=fr ou ?language=en, ... au niveau de l'URL pour le choix de la langue -->
+	<bean id="localeChangeInterceptor"
+		class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+		<property name="paramName" value="language" />
+	</bean>	
+	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping" >
+		<property name="interceptors">
+		   <list>
+			<ref bean="localeChangeInterceptor" />
+		   </list>
+		</property>
+	</bean>
+    
+    <bean
+        class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix">
+            <value>/vues/</value>
+        </property>
+        <property name="suffix">
+            <value>.jsp</value>
+        </property>
+    </bean>
+    
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://localhost:8889/nouv_techno_bdd" />
+        <property name="username" value="root" />
+        <property name="password" value="root" />
+    </bean>
+    
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+     
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+    <!-- Hibernate 4 SessionFactory Bean definition -->
+    <bean id="sessionFactory"
+        class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="annotatedClasses">
+            <list>
+                <value>com.projet.model.Country</value>
+                <value>com.projet.model.Area</value>
+                <value>com.projet.model.City</value>
+                <value>com.projet.model.Street</value>
+                <value>com.projet.model.Language</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+    
+    <!-- Declaration des Services -->
+    <bean id="countryService" class="com.projet.service.CountryService">
+        <property name="countryDao" ref="countryDao"/>
+    </bean>
+    
+    <bean id="areaService" class="com.projet.service.AreaService">
+        <property name="areaDao" ref="areaDao"/>
+    </bean>
+    
+    <bean id="cityService" class="com.projet.service.CityService">
+        <property name="cityDao" ref="cityDao"/>
+    </bean>
+    
+    <bean id="streetService" class="com.projet.service.StreetService">
+        <property name="streetDao" ref="streetDao"/>
+    </bean>
+    
+    <bean id="languageService" class="com.projet.service.LanguageService">
+        <property name="languageDao" ref="languageDao"/>
+    </bean>
+    
+    
+     <!-- Declaration des DAO -->
+    <bean id="countryDao" class="com.projet.dao.CountryDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+    <bean id="areaDao" class="com.projet.dao.AreaDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+    <bean id="cityDao" class="com.projet.dao.CityDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+    <bean id="streetDao" class="com.projet.dao.StreetDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+    <bean id="languageDao" class="com.projet.dao.LanguageDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    
+     <mvc:resources mapping="/resources/**" location="/resources/theme/"  
+	cache-period="31556926"/>
+	
+    <mvc:annotation-driven />
+</beans>
